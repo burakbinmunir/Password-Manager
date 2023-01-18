@@ -2,43 +2,33 @@ const express = require('express');
 const cors = require('cors');
 const app = express();
 const PORT = 3000;
-require('dotenv').config();
+const { MongoClient, ServerApiVersion } = require('mongodb');
 
+require('dotenv').config();
 app.use(express.urlencoded());
 app.use(express.json());
 app.use(cors())
-
-
-
-const { MongoClient, ServerApiVersion } = require('mongodb');
 const uri = process.env.connection_string;
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
-async function ff (){
-    client.connect();
-    const db = client.db('password-manager');
-    const collection = db.collection('LoginInfo');
-    const f = await collection.findOne();
-    console.log(f);
-    
+
+
+async function addLoginInfo (username, email, password){
+    await client.connect();
+    const db = await client.db('password-manager');
+    const collection = await db.collection('LoginInfo');
+    const result = await collection.insertOne({username: username, email: email, password: password});
+    const success = await result.acknowledged;  
+    return success
 }
-ff()
 
+async function getLoginInfo (username, password) {
+    await client.connect();
+    const db = await client.db("password-manager");
+    const collection = await db.collection('LoginInfo');
+    const result = await collection.findOne({username: username, password: password});
+    return result;
+}
 
-// async function run() {
-//   try {
-//     await client.connect();
-//     const db = client.db('sample_mflix');
-//     const collection = db.collection('movies');
-
-//     // Find the first document in the collection
-//     const first = await collection.findOne();
-//     console.log(first);
-//   } finally {
-//     // Close the database connection when finished or an error occurs
-//     await client.close();
-//   }
-// }
-// run().catch(console.error);
 
 
 app.listen(PORT, (error) =>{
@@ -49,20 +39,18 @@ app.listen(PORT, (error) =>{
 	}
 );
 
-app.post('/postrequest', (req, res)=>{
-    const {name, age} = req.body;
-    console.log(name,age);
-    res.send("Noted")
+
+app.post ('/login', async (req, res)=>{
+    const {username, password} = req.body;
+    const result = await getLoginInfo(username, password);
+    res.json({user: result});
 })
 
-
-app.get('/',(req, res)=>{
-    
-    res.status(200);
-    user = {
-        name : 'Burak',
-        age : 20
-    }
-    res.json({user:user});
-    
-});
+app.post('/signup', async (req, res)=>{
+    const {email, username, password} = req.body;
+    const s = await addLoginInfo(username,email,password)
+    if (s === true)
+        success = true;
+    else success = false;
+    res.json({success : success});
+})
