@@ -16,7 +16,7 @@ function Login({obj}){
     }
 
     async function loginButtonClicked(event)  {
-        if (username == ' ' || password == ' ')
+        if (username === ' ' || password === ' ')
             return;
         
         try {
@@ -32,10 +32,11 @@ function Login({obj}){
             .then(async res=> await res.json())
             .then((res)=>{
                if (res != null){
-                    if (res.user.username == username && res.user.password == password){
+                    if (res.user.username === username && res.user.password === password){
                         currentUser = res.user;
                         obj.setCurrentUser(currentUser)
-                        obj.changeRoute('signup');
+                        obj.getSavedPasswords(username);
+                        obj.changeRoute('loggedin');
                     }
                }
             })
