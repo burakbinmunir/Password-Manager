@@ -18,6 +18,11 @@ async function addLoginInfo (username, email, password){
     const collection = await db.collection('LoginInfo');
     const result = await collection.insertOne({username: username, email: email, password: password});
     const success = await result.acknowledged;  
+
+    const collection2 = await db.collection("SavedPasswords");
+    const r = await collection2.insertOne({username: username , savedPasswords: [{applicationName: 'demo', username: 'demo', password: 'demo'}]})
+
+    
     return success
 }
 
@@ -29,7 +34,25 @@ async function getLoginInfo (username, password) {
     return result;
 }
 
+async function addNewPassword (username, applicationName, appUserName, appPassword) {
+    await client.connect();
+    const db = await client.db("password-manager");
+    const collection = await db.collection("SavedPasswords");
+    const result  = await collection.updateOne({username: username} , { $push:{ savedPasswords:{
+        applicationName: applicationName,
+        username: appUserName,
+        password: appPassword
+    }}});
+    return result.acknowledged;
+}
 
+async function getSavedPasswords (username) {
+    await client.connect();
+    const db = await client.db("password-manager");
+    const collection = await db.collection("SavedPasswords");
+    const result = await collection.findOne({username: username});
+    return result;
+}
 
 app.listen(PORT, (error) =>{
 	if(!error)
@@ -40,10 +63,22 @@ app.listen(PORT, (error) =>{
 );
 
 
+app.post('/loggedin', async (req, res)=>{
+    const {username} = req.body;
+    const result = await getSavedPasswords(username);
+    res.json({result: result});
+})
+
 app.post ('/login', async (req, res)=>{
     const {username, password} = req.body;
     const result = await getLoginInfo(username, password);
     res.json({user: result});
+})
+
+app.post ('/newpassword', async (req, res)=>{
+    const {username,applicationName, appUserName, appPassword} = req.body;
+    const result = await addNewPassword(username, applicationName, appUserName, appPassword);
+    res.json({success: result});
 })
 
 app.post('/signup', async (req, res)=>{
