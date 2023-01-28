@@ -54,6 +54,18 @@ async function getSavedPasswords (username) {
     return result;
 }
 
+async function deleteSavedPassword (applicationName, username, password, currentUser){
+    await client.connect();
+    const db = await client.db("password-manager");
+    const collection = await db.collection("SavedPasswords");
+    const result = await collection.updateOne({username: currentUser}, {$pull: {savedPasswords: {
+        applicationName: applicationName,
+        username: username,
+        password: password
+    }}})
+    return result.acknowledged;
+}
+
 app.listen(PORT, (error) =>{
 	if(!error)
 		console.log("Server is Successfully Running,and App is listening on port "+ PORT)
@@ -88,4 +100,10 @@ app.post('/signup', async (req, res)=>{
         success = true;
     else success = false;
     res.json({success : success});
+})
+
+app.post('/delete', async (req,res)=>{
+    const {applicationName, username, password, currentUser} = req.body;
+    const success = await deleteSavedPassword(applicationName, username, password, currentUser);
+    res.json({success: success})
 })
