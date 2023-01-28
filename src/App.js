@@ -14,17 +14,11 @@ class App extends Component {
     super();
     this.state = {
       route : 'login',
-      passwordsLoaded: false,
     }
   }
 
   render () {
-    const tempObj = {
-      page: this.state.route,
-      username: 'Burak',
-      applicationName: 'Bumble',
-      password: 'pass'
-    }
+
     const clickObj = {
       page : this.state.route,
 
@@ -41,7 +35,6 @@ class App extends Component {
       },
 
       getSavedPasswords : (username) =>{
-        console.log(username)
         fetch("http://localhost:3000/loggedin", {
           method: 'POST',
           headers: {'Content-Type': 'application/json'},
@@ -63,7 +56,27 @@ class App extends Component {
     const passObj = {
       page : this.state.route,
       passwordsLoaded: this.state.passwordsLoaded,
-      passwords: this.savedPasswords
+      passwords: this.savedPasswords,
+      currentUser: this.currentUser,
+      changeRoute : ( newRoute ) => {
+        this.setState({route : newRoute});
+      },
+      getSavedPasswords : (username) =>{
+        fetch("http://localhost:3000/loggedin", {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({
+            username: username
+          })
+        })
+        .then (async response => await response.json())
+        .then ((response )=>{
+          if (response != null){
+            this.savedPasswords = response.result.savedPasswords;
+            this.setState({passwordsLoaded : true});
+          }
+        })
+      }
     }
   
     return (

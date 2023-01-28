@@ -3,7 +3,7 @@ import 'react-bootstrap/Card';
 
 function Navbar ({obj}){
     
-    if (obj.page === 'loggedin') {
+    if (obj.page === 'loggedin' || obj.page === 'updated') {
         return (
             <nav class="navbar bg-body-tertiary" style={{width: 1000}}>
                 <div class="container-fluid">

@@ -6,8 +6,9 @@ import { useState } from "react";
 import 'bootstrap'
 
 
+var globalCurrentUser = ' ';
 
-function returnCard (obj){
+function returnCard (obj,changeRoute){
   const [passwordShown, setPasswordShown] = useState(false);
 
   // Password toggle handler
@@ -15,7 +16,46 @@ function returnCard (obj){
     // When the handler is invoked
     // inverse the boolean state of passwordShown
     setPasswordShown(!passwordShown);
-  };
+  }
+
+  const getSavedPasswords = (username, ) =>{
+    fetch("http://localhost:3000/loggedin", {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        username: username
+      })
+    })
+    .then (async response => await response.json())
+    .then ((response )=>{
+      if (response != null){
+        this.savedPasswords = response.result.savedPasswords;
+        this.setState({passwordsLoaded : true});
+      }
+    })
+  }
+
+  const deletePassword = () =>{
+      fetch("http://localhost:3000/delete",{
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify(
+           {
+              applicationName: obj.applicationName,
+              username: obj.username,
+              password: obj.password,
+              currentUser: globalCurrentUser
+           } 
+          )
+      })
+      .then(async response => await response.json())
+      .then ((response) => {
+        if (response.success === true){
+          changeRoute(' ')
+          changeRoute('loggedin')
+        }
+      });
+  }
 
   return (
     <span>
@@ -34,30 +74,37 @@ function returnCard (obj){
         <Button onClick={togglePassword} style={{height: 29}} class="btn btn-outline-success" ><i style={{display: 'block', margin: 'auto',color: 'black'}} id="togglePassword" class="fa fa-eye-slash"> </i></Button>
         <br></br>
         <br></br>
-        {/* <Button variant="primary" >Edit</Button> */}
+        <Button variant="primary" onClick={deletePassword}>Delete</Button>
       </Card.Body>
     </Card>
     </span>    
   );
+
 }
 
 function SavedPassword ({obj}) {
   var i =0;
   var arr = [];
-  while (i < obj.passwords.length){
-    if (obj.passwords[i].username != 'demo')
-      arr.push(returnCard(obj.passwords[i]));
-    i++;
-  }
+  globalCurrentUser = obj.currentUser.username
 
-  i=0;
-  if (obj.page === 'loggedin'){
-   while(i< obj.passwords.length){
-      return(arr);
+  if (obj.page === 'loggedin') {
+    while (i < obj.passwords.length){
+      if (obj.passwords[i].username != 'demo')
+        arr.push(returnCard(obj.passwords[i], obj.changeRoute));
       i++;
+    }
+
+    i=0;
+    while(i< obj.passwords.length){
+        return(arr);
+        i++;
     };
      
   }
+  
+ 
+  
+ 
 }
 
 export default SavedPassword;
